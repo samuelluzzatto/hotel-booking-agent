@@ -1,0 +1,177 @@
+{
+  "name": "📋 Fluxo para gerar embeddings",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        -32
+      ],
+      "id": "285b5b93-c847-431c-9285-6f4b787502ee",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "documents",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -32
+      ],
+      "id": "2192c181-73cf-49ba-8e2a-141289980a24",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Bkjh3UKQD9aWdc17",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"text-embedding-3-small\",\n  \"input\": \"={{ $json.content.replace(/[\\n\\r\\t\\\"\\\\\\\\]/g, ' ') }}\",\n  \"dimensions\": 1536\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        64,
+        -32
+      ],
+      "id": "15269d41-41fa-43e8-8ed3-8de8bb245f51",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "yuL68KyQW7Fc7M7c",
+          "name": "Header Auth account"
+        },
+        "openAiApi": {
+          "id": "t6RsTCGhluuyyD5l",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "documents",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Get many rows').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "embedding",
+              "fieldValue": "={{ $json.data[0].embedding }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -32
+      ],
+      "id": "73f76c55-46b5-4e38-bb06-f3aa4498c434",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Bkjh3UKQD9aWdc17",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const lofts = [\n  { stays_id: \"GV04I\", real: \"10\" },\n  { stays_id: \"GV14I\", real: \"11\" },\n  { stays_id: \"GV15I\", real: \"12\" },\n  { stays_id: \"GV16I\", real: \"13\" },\n  { stays_id: \"GV17I\", real: \"14\" },\n  { stays_id: \"GV18I\", real: \"15\" },\n  { stays_id: \"GV19I\", real: \"16\" },\n  { stays_id: \"GV20I\", real: \"17\" },\n  { stays_id: \"GV21I\", real: \"18\" }\n];\n\nconst items = [];\n\nlofts.forEach(loft => {\n  items.push({\n    json: {\n      pageContent: `Mapeamento de Unidade: O código de sistema ${loft.stays_id} corresponde ao Loft físico número ${loft.real}. Endereço: Rua Condá, 1635 E, Chapecó. A senha do cofre para pegar a chave é 4546#.`,\n      metadata: { id_stays: loft.stays_id, numero_real: loft.real, tipo: \"mapeamento\" }\n    }\n  });\n});\n\nitems.push({\n  json: {\n    pageContent: \"Dados Bancários Locapart para PIX: Banco Sicoob (756), Agência 3069, Conta Corrente 492523-8. Chave CNPJ: 58.035.104/0001-11. Nome: Álan Fortes Alves.\",\n    metadata: { tipo: \"pagamento\" }\n  }\n});\n\nitems.push({\n  json: {\n    pageContent: \"Instruções de Acesso: A chave fica no Cofre de Cima. Digite a senha 4546#, aperte # e gire a maçaneta no sentido horário. Pegue apenas a chave do seu loft. Feche o cofre girando no sentido anti-horário. A senha só é liberada após o comprovante.\",\n    metadata: { tipo: \"acesso\" }\n  }\n});\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -32
+      ],
+      "id": "a1258294-b792-4939-a302-e50de0919c51",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9a045881-35b6-45af-a7b6-dc4a31de2d8d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "98f262c8e74bfe933374d11f52775395ac6061943f15b45a2864c8f357da37da"
+  },
+  "id": "GnDNAIvVMcWY6o0Y",
+  "tags": []
+}

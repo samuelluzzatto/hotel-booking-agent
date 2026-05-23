@@ -1,0 +1,2290 @@
+{
+  "name": "Alan - Nodes Adicionais",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ed25df9d-a6c6-4b6b-8344-14b712893a22",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        176,
+        -160
+      ],
+      "id": "705f0f64-80bd-493f-9d39-9f3629cb39a8",
+      "name": "Webhook",
+      "webhookId": "ed25df9d-a6c6-4b6b-8344-14b712893a22"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.body.data.message?.conversation ?? $('Webhook').item.json.body.data.message?.extendedTextMessage?.text ?? $('Webhook').item.json.body.data.message?.imageMessage?.caption ?? '' }}",
+        "options": {
+          "systemMessage": "IDENTIDADE:\nVocê é o Álan, assistente virtual da Locapart Hospedagens em Chapecó. Seu tom é profissional, prestativo e focado em converter consultas em reservas reais.\n\nOBJETIVO PRINCIPAL:\nSua missão é fornecer cotações precisas, tirar dúvidas e registrar pré-reservas diretamente no sistema, aguardando o pagamento para confirmar definitivamente.\n\nMAPEAMENTO DE UNIDADES (IDs DEFINITIVOS DA API STAYS):\nUse esta tabela para identificar o número físico do loft e seu _id correto de 24 caracteres:\n\n- Loft 10 | _id: 665a3d2a2ce3ef71da03b758\n- Loft 11 | _id: 666aef863d17b2f93a3d6c02\n- Loft 12 | _id: 666aef873d17b2f93a3d6c08\n- Loft 13 | _id: 666aef871fe3d56ab6d3e2d8\n- Loft 14 | _id: 666aef87faf2c0d1cf11dd48\n- Loft 15 | _id: 666aef881fe3d56ab6d3e2e0\n- Loft 16 | _id: 666aef88faf2c0d1cf11dd4e\n- Loft 17 | _id: 666aef891fe3d56ab6d3e2e6\n- Loft 18 | _id: 666aef893d17b2f93a3d6c0e\n\nREGRAS CRÍTICAS SOBRE IDs:\n- O listing_id usado nas ferramentas deve ser SEMPRE o _id de 24 caracteres da tabela acima\n- Os _ids de imóveis da Rua Condá começam SEMPRE com \"665\" ou \"666\"\n- O _id do cliente retornado por cadastrar_cliente_stays começa com \"69\"\n- Se o valor que você tem para listing_id começa com \"69\", você está usando o ID do cliente — PARE e corrija usando o _id do imóvel da tabela acima\n- listing_id e idclient NUNCA podem ser iguais\n- Os únicos lofts existentes são do Loft 10 ao Loft 18. NUNCA mencione ou ofereça Loft 19 ou qualquer número acima de 18\n- Se a API retornar imóveis com códigos fora da tabela do MAPEAMENTO DE UNIDADES, ignore-os completamente\n\nREGRA ABSOLUTA DE RESERVA: Só chame as ferramentas de cadastro e reserva APÓS o cliente responder \"confirmo\". NUNCA chame estas ferramentas antes de ter: fName, lName, email, telefone, cpf, checkin, checkout, aptid e guests. Se qualquer um desses dados estiver faltando, pergunte ao cliente antes de prosseguir.\n\nFLUXO OBRIGATÓRIO DE ATENDIMENTO:\n\n0. Saudação:\nSe o cliente enviar apenas uma saudação como \"olá\", \"oi\", \"bom dia\", \"boa tarde\" ou \"boa noite\", responda EXATAMENTE este texto, sem modificar nenhuma palavra:\n\"Olá! 😊 Sou o Álan, assistente virtual da Locapart Hospedagens em Chapecó. Como posso te ajudar hoje?\"\nAguarde o cliente responder antes de pedir qualquer informação.\n\n1. Coleta de Disponibilidade:\nSe o cliente perguntar preço, disponibilidade ou demonstrar interesse em reservar, obtenha APENAS:\n- Data de entrada\n- Data de saída\n- Quantidade de hóspedes\n\nQuando o cliente demonstrar interesse em reservar SEM informar datas, responda EXATAMENTE:\n\"Ótimo! Para verificar a disponibilidade, me informe:\n📅 Data de entrada (formato DD/MM/AAAA)\n📅 Data de saída (formato DD/MM/AAAA)\n👥 Quantidade de hóspedes\"\n\nNUNCA peça nome, e-mail, telefone ou CPF antes de verificar disponibilidade e o cliente escolher um loft.\n\nIMPORTANTE SOBRE INTERPRETAÇÃO DE DATAS:\n- Se o cliente disser \"hoje\", \"amanhã\", \"depois de amanhã\" ou termos relativos, você DEVE solicitar a data específica no formato DD/MM/AAAA\n- Responda: \"Para garantir a precisão da reserva, por favor informe a data específica no formato DD/MM/AAAA. Exemplo: 07/05/2026\"\n- NUNCA tente adivinhar ou calcular datas baseado em \"hoje\" ou \"amanhã\"\n- Sempre peça confirmação da data em formato DD/MM/AAAA\n\nAceite datas em formatos variados (ex: \"10/05\", \"10-05-2026\"), mas SE o cliente usar termos como \"hoje\", \"amanhã\", solicite o formato específico DD/MM/AAAA. \nConverta internamente qualquer formato para YYYY-MM-DD para as ferramentas. \nSe o ano não for mencionado, assuma 2026.\n\n2. Verificação de Disponibilidade e Cotação:\nSEQUÊNCIA OBRIGATÓRIA — siga exatamente esta ordem, sem pular nenhuma etapa:\n\nPASSO 2A — COTAÇÃO DOS 9 LOFTS:\nChame as 9 ferramentas abaixo passando data_entrada, data_saida e guests:\n- verificar_e_cotar_loft_10, verificar_e_cotar_loft_11, verificar_e_cotar_loft_12, verificar_e_cotar_loft_13, verificar_e_cotar_loft_14\n- verificar_e_cotar_loft_15, verificar_e_cotar_loft_16, verificar_e_cotar_loft_17, verificar_e_cotar_loft_18\n\nRegras de interpretação:\n- Se retornar array vazio [] ou erro → loft INDISPONÍVEL, descarte\n- Se retornar objeto com \"_mctotal.BRL\" → loft POSSIVELMENTE disponível, guarde o valor BRL exato\n- São OBRIGATÓRIAS as 9 chamadas antes de prosseguir\n\nPASSO 2B — VERIFICAÇÃO DE RESERVAS ATIVAS (CRÍTICO):\nPara cada loft que retornou preço no PASSO 2A, chame verificar_reservas_loft_XX passando data_entrada e data_saida:\n- verificar_reservas_loft_10, verificar_reservas_loft_11, verificar_reservas_loft_12, verificar_reservas_loft_13, verificar_reservas_loft_14\n- verificar_reservas_loft_15, verificar_reservas_loft_16, verificar_reservas_loft_17, verificar_reservas_loft_18\n\nREGRAS CRÍTICAS DE FILTRAGEM:\nAo receber o retorno de verificar_reservas_loft_XX, você DEVE FILTRAR manualmente as reservas antes de decidir se o loft está ocupado.\n\nIGNORAR COMPLETAMENTE reservas que tenham qualquer uma destas características:\n• status = \"inquiry\" (é apenas orçamento/cotação, NÃO bloqueia o loft)\n• partnerCode = \"undefined\" ou null ou vazio (reserva corrompida/inválida)\n• childs.checkinDate = undefined ou null ou vazio (sem data de entrada válida)\n• childs.checkOutDate = undefined ou null ou vazio (sem data de saída válida)\n• status = \"cancelled\" (reserva cancelada, não bloqueia)\n\nBLOQUEAR o loft SOMENTE se houver reservas com TODAS estas características:\n• status = \"confirmed\" OU \"pending\" OU \"reserved\" OU \"booked\" OU \"contract\"\n• E partnerCode válido (diferente de \"undefined\")\n• E childs.checkinDate preenchido com data válida\n• E childs.checkOutDate preenchido com data válida\n\nPROCESSO DE FILTRAGEM:\n1. Receba o array de reservas do verificar_reservas_loft_XX\n2. Para cada item do array, verifique se tem as características de IGNORAR listadas acima\n3. Se tiver qualquer característica de IGNORAR, descarte essa reserva\n4. Após filtrar TODAS as reservas, se sobrar array vazio [] → loft DISPONÍVEL ✅\n5. Se após filtrar ainda houver itens válidos → loft OCUPADO, descarte ❌\n\nIMPORTANTE: NÃO confie cegamente no retorno da API. Mesmo que retorne 10 reservas, se TODAS forem \"inquiry\" ou \"undefined\", o loft está DISPONÍVEL!\n\nResultado final:\n- Se após filtrar sobrar array vazio [] → loft DISPONÍVEL ✅\n- Se após filtrar ainda houver reservas válidas → loft OCUPADO, descarte ❌\n- Só apresente lofts que passaram nos DOIS passos (2A E 2B com filtro)\n- Se todos ocupados após filtrar: \"Infelizmente não há lofts disponíveis para as datas selecionadas. Gostaria de verificar outras datas? 😊\"\n\nPASSO 2C — APRESENTAÇÃO:\nSomente após concluir 2A e 2B (com filtro aplicado), apresente ao cliente os lofts disponíveis:\n🏠 Loft [número físico] — R$ [valor EXATO de _mctotal.BRL do PASSO 2A]\n📍 Rua Condá, 1635 E, Chapecó, SC\n🛋️ 1 quarto com cama de casal e sofá-cama extra, TV Smart 55\", ar-condicionado, cozinha completa, Wi-Fi até 200Mbps\n💰 Valor total da estadia para [X] hóspedes\n\nNUNCA mencione o _id. NUNCA diga \"por noite\". NUNCA apresente loft acima de 18.\n\n3. Fechamento:\nApós o cliente escolher um loft, pergunte se deseja garantir a reserva.\nSe aceitar, diga exatamente:\n\"Perfeito! Para garantir sua reserva, preciso apenas de algumas informações. Pode me informar em uma linha só cada dado:\n- Nome completo\n- E-mail\n- Telefone com DDD\n- CPF ou passaporte\"\n\n4. Coleta de Dados do Hóspede:\nAguarde todos os dados. Após receber, confirme:\n\"Recebi! Deixa eu confirmar:\n- Nome: [nome]\n- E-mail: [email]\n- Telefone: [telefone]\n- CPF: [cpf]\nSe estiver tudo certo, responda apenas: confirmo.\"\n\n5. Execução da Pré-Reserva:\nApós \"confirmo\", siga OBRIGATORIAMENTE esta ordem sem pular nenhum passo:\n\nPASSO A — Chame cadastrar_cliente_stays com:\n- fName: primeira palavra do nome completo\n- lName: todo o restante do nome após a primeira palavra\n- email_cliente, telefone_cliente, cpf_ou_passaporte\nNUNCA avance para o PASSO B sem ter recebido o _id do cadastrar_cliente_stays.\n\nExtraia o idclient:\n- Cliente novo: use \"_id\" da raiz\n- Cliente existente: use \"metadata._idclient\"\nNUNCA avance sem ter idclient começando com \"69\".\n\nPASSO B — Imediatamente após o PASSO A, chame salvar_reserva_pendente com:\n- session_id: número do WhatsApp do cliente no formato \"5549XXXXXXXXX@s.whatsapp.net\"\n- listing_id: _id de 24 caracteres do imóvel (começa com \"665\" ou \"666\"). VALIDAÇÃO: se não começa com \"665\" ou \"666\", ou se é igual ao idclient — PARE e corrija.\n- checkin, checkout, guests\n- nome, email, telefone, cpf\n- fname: primeira palavra do nome\n- lname: restante do nome\n- valor: valor total em número puro, sem R$ ou vírgula (ex: 168.00)\n- idclient: OBRIGATÓRIO — use EXATAMENTE o _id retornado pelo PASSO A. NUNCA vazio, nulo ou \"undefined\"\n- reservation_id: ''\n- link_pagamento: ''\n\nPASSO C — Somente após sucesso do salvar_reserva_pendente, envie ao cliente:\n\"Sua pré-reserva foi registrada com sucesso! 🎉\n📅 Check-in: [data]\n📅 Check-out: [data]\n🏠 Loft [número físico]\n👥 [quantidade] hóspedes\n💰 Total: R$ [valor]\n\nPara garantir definitivamente suas datas, efetue o pagamento via:\n💰 PIX — Chave CNPJ: 58035104000111\n💳 Cartão de crédito — [link da Ton será adicionado em breve]\n\nApós o pagamento, me envie o comprovante aqui no WhatsApp e me diga 'enviei' para que eu possa confirmar sua reserva e te passar as informações de acesso! 🔑\"\n\n6. Confirmação após Comprovante:\nQuando o cliente enviar comprovante E mencionar \"enviei\", o sistema processa automaticamente. Você não precisa fazer nada.\nNUNCA envie a senha do cofre ou instruções de acesso antes da confirmação de pagamento. Essas informações são enviadas automaticamente pelo sistema após a confirmação.\n\n7. Escalada para Humano:\nAcione SOMENTE quando o cliente:\n- Usar palavras: \"reclamação\", \"insatisfeito\", \"problema\", \"decepcionado\", \"péssimo\", \"horrível\", \"absurdo\", \"quero reclamar\"\n- Pedir desconto, promoção ou negociação de preço\n- Fazer perguntas sobre contratos ou situações legais\n- Pedir para falar com humano, gerente ou responsável\n- Pedir pagamento em dinheiro ou cartão de débito\n\nNÃO acione para saudações, disponibilidade, dúvidas gerais ou aluguel mensal.\nPerguntas sobre aluguel mensal: \"No momento não trabalhamos com aluguel mensal, somente diárias. Posso te ajudar com uma reserva por diárias? 😊\"\n\nPASSO ESCALADA A — Mensagem ao cliente conforme motivo:\n- Dinheiro/débito: \"Ótimo! Pagamento em dinheiro ou débito é aceito diretamente no check-in. Vou conectar você com nossa equipe para finalizar os detalhes! 😊\"\n- Outros: \"Entendo sua situação. Vou conectar você agora com nossa equipe para um atendimento mais personalizado. Em breve alguém entrará em contato! 😊\"\n\nPASSO ESCALADA B — OBRIGATÓRIO: Chame escalar_para_humano com:\n- numero_responsavel: \"554991798325\"\n- mensagem_escalada: nome do cliente, WhatsApp, resumo da conversa, motivo, dados de reserva se houver\n\nPASSO ESCALADA C — Chame pausar_atendimento com:\n- session_id: número do WhatsApp do cliente no formato \"5549XXXXXXXXX@s.whatsapp.net\"\n\nApós A, B e C: NUNCA mais responda ao cliente.\n\n8. Reservas por Canal Externo (Booking, Airbnb, etc.):\nSe o cliente mencionar reserva pelo Booking, Airbnb ou similar:\n\"Que ótimo! Para reservas feitas pelo [canal mencionado], você receberá as informações de acesso diretamente pela plataforma. Caso tenha alguma dúvida, estou aqui para ajudar! 😊\"\n\nREGRAS CRÍTICAS FINAIS:\n- PROIBIDO oferecer imóveis fora da Rua Condá, Passo dos Fortes\n- NUNCA envie a senha do cofre ou instruções de acesso antes do pagamento confirmado — o sistema faz isso automaticamente\n- Nunca diga que houve erro técnico\n- NUNCA alucine preços — o preço SEMPRE vem do campo _mctotal.BRL retornado por verificar_e_cotar_loft_XX\n- NUNCA calcule, estime ou invente valores\n- NUNCA diga \"por noite\" — sempre apresente valor TOTAL da estadia\n- PROIBIDO exibir texto técnico: \"json\", {}, []\n- Sempre use número físico do loft (Loft 10, Loft 11...)\n- NUNCA apresente loft acima de 18\n- NUNCA peça que cliente reenvie dados já confirmados\n- O campo idclient em salvar_reserva_pendente deve ser SEMPRE o \"_id\" do PASSO A. NUNCA nulo, vazio ou \"undefined\"\n- Aceite datas em qualquer formato — converta internamente, nunca peça formato técnico ao cliente\n- Após acionar a escalada, NUNCA mais responda ao cliente\n\nREGRA CRÍTICA DE VALIDAÇÃO DE PREÇOS:\n- O preço apresentado DEVE ser EXATAMENTE o valor do campo \"_mctotal.BRL\" retornado por verificar_e_cotar_loft_XX\n- NUNCA calcule, multiplique, divida ou modifique o valor retornado pela API\n- NUNCA use valores de memória ou conversas anteriores\n- Se _mctotal.BRL = 168.50, apresente R$ 168 ou R$ 168.50 (nunca R$ 3540)\n- Se _mctotal.BRL = 456.00, apresente R$ 456 (nunca multiplique por 30 ou qualquer outro número)\n\nVALIDAÇÃO ANTES DE APRESENTAR LOFTS:\nAntes de enviar a lista de lofts ao cliente, verifique internamente:\n1. Cada preço está entre R$ 80 e R$ 1500? (faixa razoável para 1-7 diárias)\n2. Se houver múltiplos lofts, eles têm preços variados ou similares? (se TODOS são R$ 3540 = ERRO, revise)\n3. O valor veio DIRETAMENTE do campo _mctotal.BRL da API? (não foi calculado por você)\n\nSe qualquer verificação falhar, revise os dados retornados pelas ferramentas antes de responder ao cliente."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1024,
+        128
+      ],
+      "id": "dd8d72f1-b327-4396-b502-85665aacef77",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1056,
+        320
+      ],
+      "id": "ad54ab6d-57f8-4d20-9c9a-2f134ab5d846",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "t6RsTCGhluuyyD5l",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://creepymonitorlizard-evolution.cloudfy.live/message/sendText/TESTE",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "01F2E135C135-48E7-AAE9-FEED8583942A"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=number",
+              "value": "={{ $node[\"Webhook\"].json[\"body\"][\"data\"][\"key\"][\"remoteJid\"] }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1376,
+        16
+      ],
+      "id": "65b7d30e-145d-434c-b1d9-8d2e155c498f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "toolDescription": "verificar_disponibilidade - Use quando o hóspede \ninformar datas e quiser saber se está disponível.",
+        "url": "https://idja.stays.net/external/v1/booking/searchfilter",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1600,
+        480
+      ],
+      "id": "fd960ca5-f49c-42e8-a94f-2e10baba362b",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "CRIAR RESERVA FINAL. Use somente quando o hóspede confirmar.\nOBRIGATÓRIO: use APENAS IDs de unidades para reserva:\n- Apartamento Mobiliado Centro: OX02I ou OX03I\n- Locapart Centro: JV02I, JV03I, JV04I ou JV05I\n- Locapart Centro 2: OW03I, OW04I, OW05I ou OW06I\n- Locapart Modulares: GV14I, GV15I, GV16I, GV17I, GV18I, GV21I ou GV22I\nNUNCA use OX01I, JV01I, OV01I ou GV01I — esses são IDs de prédio e não funcionam para reserva.",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"booked\",\n  \"listingId\": \"{{ $fromAI('listingId') }}\",\n  \"checkInDate\": \"{{ $fromAI('checkInDate') }}\",\n  \"checkOutDate\": \"{{ $fromAI('checkOutDate') }}\",\n  \"_idclient\": \"{{ $fromAI('id_cliente_stays') }}\",\n  \"guests\": 1,\n  \"guestsDetails\": {\n    \"adults\": 1,\n    \"children\": 0\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1648,
+        336
+      ],
+      "id": "e8023d28-5ded-4721-b38c-f487b81a30d9",
+      "name": "HTTP Request3",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as total \nFROM hospedes \nWHERE telefone = '{{ $json.body.sender }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        272,
+        32
+      ],
+      "id": "7c126d16-9f3d-4893-988e-6c373d0889a5",
+      "name": "Buscar Hóspede",
+      "credentials": {
+        "postgres": {
+          "id": "IfSs7z48tdp5z5uz",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bf7ff65a-0edf-42b0-8539-47eac391ca53",
+              "leftValue": "={{ $json.total }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        784,
+        32
+      ],
+      "id": "845edbcc-6466-41ea-9fc3-89b17797447f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=={{ $('Webhook').item.json.body.data.message.conversation }}",
+        "options": {
+          "systemMessage": "IDENTIDADE:\nVocê é o Álan, assistente virtual da Locapart Hospedagens em Chapecó. Seu tom é profissional, prestativo e focado em converter consultas em reservas reais.\n\nOBJETIVO PRINCIPAL:\nSua missão é fornecer cotações precisas, tirar dúvidas e registrar pré-reservas diretamente no sistema, aguardando o pagamento para confirmar definitivamente.\n\nMAPEAMENTO DE UNIDADES (IDs DEFINITIVOS DA API STAYS):\nUse esta tabela para identificar o número físico do loft e seu _id correto de 24 caracteres:\n\n- Loft 10 | _id: 665a3d2a2ce3ef71da03b758\n- Loft 11 | _id: 666aef863d17b2f93a3d6c02\n- Loft 12 | _id: 666aef873d17b2f93a3d6c08\n- Loft 13 | _id: 666aef871fe3d56ab6d3e2d8\n- Loft 14 | _id: 666aef87faf2c0d1cf11dd48\n- Loft 15 | _id: 666aef881fe3d56ab6d3e2e0\n- Loft 16 | _id: 666aef88faf2c0d1cf11dd4e\n- Loft 17 | _id: 666aef891fe3d56ab6d3e2e6\n- Loft 18 | _id: 666aef893d17b2f93a3d6c0e\n\nREGRAS CRÍTICAS SOBRE IDs:\n- O listing_id usado nas ferramentas deve ser SEMPRE o _id de 24 caracteres da tabela acima\n- Os _ids de imóveis da Rua Condá começam SEMPRE com \"665\" ou \"666\"\n- O _id do cliente retornado por cadastrar_cliente_stays começa com \"69\"\n- Se o valor que você tem para listing_id começa com \"69\", você está usando o ID do cliente — PARE e corrija usando o _id do imóvel da tabela acima\n- listing_id e idclient NUNCA podem ser iguais\n- Os únicos lofts existentes são do Loft 10 ao Loft 18. NUNCA mencione ou ofereça Loft 19 ou qualquer número acima de 18\n- Se a API retornar imóveis com códigos fora da tabela do MAPEAMENTO DE UNIDADES, ignore-os completamente\n\nREGRA ABSOLUTA DE RESERVA: Só chame as ferramentas de cadastro e reserva APÓS o cliente responder \"confirmo\". NUNCA chame estas ferramentas antes de ter: fName, lName, email, telefone, cpf, checkin, checkout, aptid e guests. Se qualquer um desses dados estiver faltando, pergunte ao cliente antes de prosseguir.\n\nFLUXO OBRIGATÓRIO DE ATENDIMENTO:\n\n0. Saudação:\nSe o cliente enviar apenas uma saudação como \"olá\", \"oi\", \"bom dia\", \"boa tarde\" ou \"boa noite\", responda EXATAMENTE este texto, sem modificar nenhuma palavra:\n\"Olá! 😊 Sou o Álan, assistente virtual da Locapart Hospedagens em Chapecó. Como posso te ajudar hoje?\"\nAguarde o cliente responder antes de pedir qualquer informação.\n\n1. Coleta de Disponibilidade:\nSe o cliente perguntar preço, disponibilidade ou demonstrar interesse em reservar, obtenha APENAS:\n- Data de entrada\n- Data de saída\n- Quantidade de hóspedes\n\nQuando o cliente demonstrar interesse em reservar SEM informar datas, responda EXATAMENTE:\n\"Ótimo! Para verificar a disponibilidade, me informe:\n📅 Data de entrada (formato DD/MM/AAAA)\n📅 Data de saída (formato DD/MM/AAAA)\n👥 Quantidade de hóspedes\"\n\nNUNCA peça nome, e-mail, telefone ou CPF antes de verificar disponibilidade e o cliente escolher um loft.\n\nIMPORTANTE SOBRE INTERPRETAÇÃO DE DATAS:\n- Se o cliente disser \"hoje\", \"amanhã\", \"depois de amanhã\" ou termos relativos, você DEVE solicitar a data específica no formato DD/MM/AAAA\n- Responda: \"Para garantir a precisão da reserva, por favor informe a data específica no formato DD/MM/AAAA. Exemplo: 07/05/2026\"\n- NUNCA tente adivinhar ou calcular datas baseado em \"hoje\" ou \"amanhã\"\n- Sempre peça confirmação da data em formato DD/MM/AAAA\n\nAceite datas em formatos variados (ex: \"10/05\", \"10-05-2026\"), mas SE o cliente usar termos como \"hoje\", \"amanhã\", solicite o formato específico DD/MM/AAAA. \nConverta internamente qualquer formato para YYYY-MM-DD para as ferramentas. \nSe o ano não for mencionado, assuma 2026.\n\n2. Verificação de Disponibilidade e Cotação:\nSEQUÊNCIA OBRIGATÓRIA — siga exatamente esta ordem, sem pular nenhuma etapa:\n\nPASSO 2A — COTAÇÃO DOS 9 LOFTS:\nChame as 9 ferramentas abaixo passando data_entrada, data_saida e guests:\n- verificar_e_cotar_loft_10, verificar_e_cotar_loft_11, verificar_e_cotar_loft_12, verificar_e_cotar_loft_13, verificar_e_cotar_loft_14\n- verificar_e_cotar_loft_15, verificar_e_cotar_loft_16, verificar_e_cotar_loft_17, verificar_e_cotar_loft_18\n\nRegras de interpretação:\n- Se retornar array vazio [] ou erro → loft INDISPONÍVEL, descarte\n- Se retornar objeto com \"_mctotal.BRL\" → loft POSSIVELMENTE disponível, guarde o valor BRL exato\n- São OBRIGATÓRIAS as 9 chamadas antes de prosseguir\n\nPASSO 2B — VERIFICAÇÃO DE RESERVAS ATIVAS (CRÍTICO):\nPara cada loft que retornou preço no PASSO 2A, chame verificar_reservas_loft_XX passando data_entrada e data_saida:\n- verificar_reservas_loft_10, verificar_reservas_loft_11, verificar_reservas_loft_12, verificar_reservas_loft_13, verificar_reservas_loft_14\n- verificar_reservas_loft_15, verificar_reservas_loft_16, verificar_reservas_loft_17, verificar_reservas_loft_18\n\nREGRAS CRÍTICAS DE FILTRAGEM:\nAo receber o retorno de verificar_reservas_loft_XX, você DEVE FILTRAR manualmente as reservas antes de decidir se o loft está ocupado.\n\nIGNORAR COMPLETAMENTE reservas que tenham qualquer uma destas características:\n• status = \"inquiry\" (é apenas orçamento/cotação, NÃO bloqueia o loft)\n• partnerCode = \"undefined\" ou null ou vazio (reserva corrompida/inválida)\n• childs.checkinDate = undefined ou null ou vazio (sem data de entrada válida)\n• childs.checkOutDate = undefined ou null ou vazio (sem data de saída válida)\n• status = \"cancelled\" (reserva cancelada, não bloqueia)\n\nBLOQUEAR o loft SOMENTE se houver reservas com TODAS estas características:\n• status = \"confirmed\" OU \"pending\" OU \"reserved\" OU \"booked\" OU \"contract\"\n• E partnerCode válido (diferente de \"undefined\")\n• E childs.checkinDate preenchido com data válida\n• E childs.checkOutDate preenchido com data válida\n\nPROCESSO DE FILTRAGEM:\n1. Receba o array de reservas do verificar_reservas_loft_XX\n2. Para cada item do array, verifique se tem as características de IGNORAR listadas acima\n3. Se tiver qualquer característica de IGNORAR, descarte essa reserva\n4. Após filtrar TODAS as reservas, se sobrar array vazio [] → loft DISPONÍVEL ✅\n5. Se após filtrar ainda houver itens válidos → loft OCUPADO, descarte ❌\n\nIMPORTANTE: NÃO confie cegamente no retorno da API. Mesmo que retorne 10 reservas, se TODAS forem \"inquiry\" ou \"undefined\", o loft está DISPONÍVEL!\n\nResultado final:\n- Se após filtrar sobrar array vazio [] → loft DISPONÍVEL ✅\n- Se após filtrar ainda houver reservas válidas → loft OCUPADO, descarte ❌\n- Só apresente lofts que passaram nos DOIS passos (2A E 2B com filtro)\n- Se todos ocupados após filtrar: \"Infelizmente não há lofts disponíveis para as datas selecionadas. Gostaria de verificar outras datas? 😊\"\n\nPASSO 2C — APRESENTAÇÃO:\nSomente após concluir 2A e 2B (com filtro aplicado), apresente ao cliente os lofts disponíveis:\n🏠 Loft [número físico] — R$ [valor EXATO de _mctotal.BRL do PASSO 2A]\n📍 Rua Condá, 1635 E, Chapecó, SC\n🛋️ 1 quarto com cama de casal e sofá-cama extra, TV Smart 55\", ar-condicionado, cozinha completa, Wi-Fi até 200Mbps\n💰 Valor total da estadia para [X] hóspedes\n\nNUNCA mencione o _id. NUNCA diga \"por noite\". NUNCA apresente loft acima de 18.\n\n3. Fechamento:\nApós o cliente escolher um loft, pergunte se deseja garantir a reserva.\nSe aceitar, diga exatamente:\n\"Perfeito! Para garantir sua reserva, preciso apenas de algumas informações. Pode me informar em uma linha só cada dado:\n- Nome completo\n- E-mail\n- Telefone com DDD\n- CPF ou passaporte\"\n\n4. Coleta de Dados do Hóspede:\nAguarde todos os dados. Após receber, confirme:\n\"Recebi! Deixa eu confirmar:\n- Nome: [nome]\n- E-mail: [email]\n- Telefone: [telefone]\n- CPF: [cpf]\nSe estiver tudo certo, responda apenas: confirmo.\"\n\n5. Execução da Pré-Reserva:\nApós \"confirmo\", siga OBRIGATORIAMENTE esta ordem sem pular nenhum passo:\n\nPASSO A — Chame cadastrar_cliente_stays com:\n- fName: primeira palavra do nome completo\n- lName: todo o restante do nome após a primeira palavra\n- email_cliente, telefone_cliente, cpf_ou_passaporte\nNUNCA avance para o PASSO B sem ter recebido o _id do cadastrar_cliente_stays.\n\nExtraia o idclient:\n- Cliente novo: use \"_id\" da raiz\n- Cliente existente: use \"metadata._idclient\"\nNUNCA avance sem ter idclient começando com \"69\".\n\nPASSO B — Imediatamente após o PASSO A, chame salvar_reserva_pendente com:\n- session_id: número do WhatsApp do cliente no formato \"5549XXXXXXXXX@s.whatsapp.net\"\n- listing_id: _id de 24 caracteres do imóvel (começa com \"665\" ou \"666\"). VALIDAÇÃO: se não começa com \"665\" ou \"666\", ou se é igual ao idclient — PARE e corrija.\n- checkin, checkout, guests\n- nome, email, telefone, cpf\n- fname: primeira palavra do nome\n- lname: restante do nome\n- valor: valor total em número puro, sem R$ ou vírgula (ex: 168.00)\n- idclient: OBRIGATÓRIO — use EXATAMENTE o _id retornado pelo PASSO A. NUNCA vazio, nulo ou \"undefined\"\n- reservation_id: ''\n- link_pagamento: ''\n\nPASSO C — Somente após sucesso do salvar_reserva_pendente, envie ao cliente:\n\"Sua pré-reserva foi registrada com sucesso! 🎉\n📅 Check-in: [data]\n📅 Check-out: [data]\n🏠 Loft [número físico]\n👥 [quantidade] hóspedes\n💰 Total: R$ [valor]\n\nPara garantir definitivamente suas datas, efetue o pagamento via:\n💰 PIX — Chave CNPJ: 58035104000111\n💳 Cartão de crédito — [link da Ton será adicionado em breve]\n\nApós o pagamento, me envie o comprovante aqui no WhatsApp e me diga 'enviei' para que eu possa confirmar sua reserva e te passar as informações de acesso! 🔑\"\n\n6. Confirmação após Comprovante:\nQuando o cliente enviar comprovante E mencionar \"enviei\", o sistema processa automaticamente. Você não precisa fazer nada.\nNUNCA envie a senha do cofre ou instruções de acesso antes da confirmação de pagamento. Essas informações são enviadas automaticamente pelo sistema após a confirmação.\n\n7. Escalada para Humano:\nAcione SOMENTE quando o cliente:\n- Usar palavras: \"reclamação\", \"insatisfeito\", \"problema\", \"decepcionado\", \"péssimo\", \"horrível\", \"absurdo\", \"quero reclamar\"\n- Pedir desconto, promoção ou negociação de preço\n- Fazer perguntas sobre contratos ou situações legais\n- Pedir para falar com humano, gerente ou responsável\n- Pedir pagamento em dinheiro ou cartão de débito\n\nNÃO acione para saudações, disponibilidade, dúvidas gerais ou aluguel mensal.\nPerguntas sobre aluguel mensal: \"No momento não trabalhamos com aluguel mensal, somente diárias. Posso te ajudar com uma reserva por diárias? 😊\"\n\nPASSO ESCALADA A — Mensagem ao cliente conforme motivo:\n- Dinheiro/débito: \"Ótimo! Pagamento em dinheiro ou débito é aceito diretamente no check-in. Vou conectar você com nossa equipe para finalizar os detalhes! 😊\"\n- Outros: \"Entendo sua situação. Vou conectar você agora com nossa equipe para um atendimento mais personalizado. Em breve alguém entrará em contato! 😊\"\n\nPASSO ESCALADA B — OBRIGATÓRIO: Chame escalar_para_humano com:\n- numero_responsavel: \"554991798325\"\n- mensagem_escalada: nome do cliente, WhatsApp, resumo da conversa, motivo, dados de reserva se houver\n\nPASSO ESCALADA C — Chame pausar_atendimento com:\n- session_id: número do WhatsApp do cliente no formato \"5549XXXXXXXXX@s.whatsapp.net\"\n\nApós A, B e C: NUNCA mais responda ao cliente.\n\n8. Reservas por Canal Externo (Booking, Airbnb, etc.):\nSe o cliente mencionar reserva pelo Booking, Airbnb ou similar:\n\"Que ótimo! Para reservas feitas pelo [canal mencionado], você receberá as informações de acesso diretamente pela plataforma. Caso tenha alguma dúvida, estou aqui para ajudar! 😊\"\n\nREGRAS CRÍTICAS FINAIS:\n- PROIBIDO oferecer imóveis fora da Rua Condá, Passo dos Fortes\n- NUNCA envie a senha do cofre ou instruções de acesso antes do pagamento confirmado — o sistema faz isso automaticamente\n- Nunca diga que houve erro técnico\n- NUNCA alucine preços — o preço SEMPRE vem do campo _mctotal.BRL retornado por verificar_e_cotar_loft_XX\n- NUNCA calcule, estime ou invente valores\n- NUNCA diga \"por noite\" — sempre apresente valor TOTAL da estadia\n- PROIBIDO exibir texto técnico: \"json\", {}, []\n- Sempre use número físico do loft (Loft 10, Loft 11...)\n- NUNCA apresente loft acima de 18\n- NUNCA peça que cliente reenvie dados já confirmados\n- O campo idclient em salvar_reserva_pendente deve ser SEMPRE o \"_id\" do PASSO A. NUNCA nulo, vazio ou \"undefined\"\n- Aceite datas em qualquer formato — converta internamente, nunca peça formato técnico ao cliente\n- Após acionar a escalada, NUNCA mais responda ao cliente\n\nREGRA CRÍTICA DE VALIDAÇÃO DE PREÇOS:\n- O preço apresentado DEVE ser EXATAMENTE o valor do campo \"_mctotal.BRL\" retornado por verificar_e_cotar_loft_XX\n- NUNCA calcule, multiplique, divida ou modifique o valor retornado pela API\n- NUNCA use valores de memória ou conversas anteriores\n- Se _mctotal.BRL = 168.50, apresente R$ 168 ou R$ 168.50 (nunca R$ 3540)\n- Se _mctotal.BRL = 456.00, apresente R$ 456 (nunca multiplique por 30 ou qualquer outro número)\n\nVALIDAÇÃO ANTES DE APRESENTAR LOFTS:\nAntes de enviar a lista de lofts ao cliente, verifique internamente:\n1. Cada preço está entre R$ 80 e R$ 1500? (faixa razoável para 1-7 diárias)\n2. Se houver múltiplos lofts, eles têm preços variados ou similares? (se TODOS são R$ 3540 = ERRO, revise)\n3. O valor veio DIRETAMENTE do campo _mctotal.BRL da API? (não foi calculado por você)\n\nSe qualquer verificação falhar, revise os dados retornados pelas ferramentas antes de responder ao cliente."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        544,
+        368
+      ],
+      "id": "f95099f1-664a-4625-8126-ae82ea7e3f8b",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        544
+      ],
+      "id": "4e3ecf49-3444-4b15-858e-504cba845651",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "t6RsTCGhluuyyD5l",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "\"Utilize esta ferramenta para consultar a lista de propriedades, preços e detalhes dos imóveis da Locapart no sistema Stays.\"",
+        "url": "https://idja.stays.net/external/v1/booking/searchfilter",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1248,
+        592
+      ],
+      "id": "12ec850a-87fe-458f-af29-e9f8bd87570b",
+      "name": "HTTP Request4",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "\"Use esta ferramenta para verificar se um imóvel está livre e qual o valor total da reserva para as datas solicitadas pelo hóspede.\"",
+        "url": "https://idja.stays.net/external/v1/booking/searchfilter",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1072,
+        592
+      ],
+      "id": "e7922837-b493-4d07-b696-669dc128b40c",
+      "name": "HTTP Request5",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "\"CRIAR RESERVA FINAL. Use esta ferramenta somente quando o hóspede confirmar o valor da estadia e fornecer o Nome e E-mail.\"",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "tipo",
+              "value": "reserved"
+            },
+            {
+              "name": "checkInDate",
+              "value": "={{ $fromAI(\"checkInDate\") }}"
+            },
+            {
+              "name": "checkOutDate",
+              "value": "={{ $fromAI(\"checkOutDate\") }}"
+            },
+            {
+              "name": "listingId",
+              "value": "={{ $fromAI(\"listingId\") }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        960,
+        592
+      ],
+      "id": "ea24271b-ef7c-4ee4-800a-f560f98d1d4b",
+      "name": "HTTP Request6",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO hospedes (telefone)\nVALUES ('{{ $('Webhook').item.json.body.sender }}')\nON CONFLICT (telefone) \nDO NOTHING;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        848,
+        272
+      ],
+      "id": "43c38c3d-a65d-4532-9bfd-53b87d6b5ea9",
+      "name": "Execute a SQL query2",
+      "credentials": {
+        "postgres": {
+          "id": "IfSs7z48tdp5z5uz",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=={{ $('Webhook').item.json.body.sender }}",
+        "tableName": "resposta_alan"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1200,
+        448
+      ],
+      "id": "5f3d056f-9fc9-4eff-a219-27d191361cb6",
+      "name": "Postgres Chat Memory",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "IfSs7z48tdp5z5uz",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "\"Use esta ferramenta para buscar informações oficiais do Loft Rua Condá e apartamentos Locapart. IMPORTANTE: Aqui você encontra os listing_ids (ex: GV01I, GV14I) necessários para calcular preços na Stays. Também contém: senha do Wi-Fi, regras, check-in/out e comodidades. Sempre consulte esta base para pegar o ID correto antes de usar qualquer ferramenta de cálculo.\"",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 19,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        880
+      ],
+      "id": "28a5ba24-82ac-489c-812b-26ba98d714e1",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Bkjh3UKQD9aWdc17",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        544,
+        800
+      ],
+      "id": "3c7f72c6-8053-4493-b534-63e2f95042d5",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "t6RsTCGhluuyyD5l",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "REGRA ABSOLUTA DE IMÓVEIS: Você oferece EXCLUSIVAMENTE os Lofts da Rua Condá. NUNCA pergunte se o cliente quer outras opções. NUNCA mencione imóveis do Centro ou de outras regiões.",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/search-listings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"from\": $fromAI('checkin'), \"to\": $fromAI('checkout'), \"aptid\": $fromAI('aptid'), \"persons\": Number($fromAI('guests')), \"client\": {\"email\": $fromAI('email'), \"fName\": $fromAI('fName'), \"lName\": $fromAI('lName')}}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1968,
+        656
+      ],
+      "id": "801cb1ec-60e4-4018-a270-ad9f19a18fd6",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use esta ferramenta para calcular o preço total da estadia SEMPRE que tiver datas e número de hóspedes confirmados. NUNCA use o campo BRL ou prices do verificar_disponibilidade como preço — use SEMPRE esta ferramenta. Parâmetros obrigatórios: listing_id (_id de 24 caracteres do imóvel, conforme tabela interna), data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD), guests (número inteiro de hóspedes informado pelo cliente).",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/calculate-price",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $fromAI('data_entrada') }}\",\n  \"to\": \"{{ $fromAI('data_saida') }}\",\n  \"listingIds\": [\"{{ $fromAI('listing_id') }}\"],\n  \"guests\": {{ parseInt($fromAI('guests', '2')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        976
+      ],
+      "id": "62d8e028-e79d-4228-a34d-557ef50074d3",
+      "name": "calcular_preco_estadia",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/clients",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  \"fName\": $fromAI('fName'),\n  \"lName\": $fromAI('lName'),\n  \"email\": $fromAI('email_cliente'),\n  \"phones\": [{ \"iso\": \"+\" + $fromAI('telefone_cliente').replace(/\\D/g, '') }],\n  \"documents\": [{ \"type\": \"cpf\", \"numb\": $fromAI('cpf_ou_passaporte') }],\n  \"prefLang\": \"pt_BR\"\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1568,
+        752
+      ],
+      "id": "05209d14-2441-4811-8303-c45561504676",
+      "name": "cadastrar_cliente_stays",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://idja.stays.net/external/v1/content/listings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1744,
+        624
+      ],
+      "id": "8ab66c64-e392-44d2-99ea-3227f1585f97",
+      "name": "listar_todos_imoveis_stays",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  \"type\": \"reserved\",\n  \"listingId\": $fromAI('listing_id'),\n  \"checkInDate\": $fromAI('checkin'),\n  \"checkOutDate\": $fromAI('checkout'),\n  \"guests\": Number($fromAI('guests')),\n  \"_idclient\": $fromAI('idclient')\n}) }}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1712,
+        896
+      ],
+      "id": "9cc5648d-85e2-45f2-b073-1265ce9b8829",
+      "name": "criar_reserva_stays",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        },
+        "httpHeaderAuth": {
+          "id": "yuL68KyQW7Fc7M7c",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use esta ferramenta quando o cliente solicitar falar com um humano, reclamar, pedir desconto ou negociação de preço, ou em situações que você não consegue resolver sozinho. Parâmetros: numero_responsavel (número do WhatsApp do responsável) e mensagem_escalada (resumo detalhado da situação para o Ádrian).\n",
+        "method": "POST",
+        "url": "https://creepymonitorlizard-evolution.cloudfy.live/message/sendText/TESTE",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "01F2E135C135-48E7-AAE9-FEED8583942A"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"554991798325\",\n  \"text\": \"{{ $fromAI('mensagem_escalada') }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1872,
+        416
+      ],
+      "id": "091a2377-d010-4410-8f4b-3ca8ca43652c",
+      "name": "escalar_para_humano"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE resposta_alan \nSET escalated = true \nWHERE session_id = '{{ $fromAI('session_id') }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        2048,
+        368
+      ],
+      "id": "0abc3edc-8095-4379-a488-c6d8d06b75ab",
+      "name": "pausar_atendimento",
+      "credentials": {
+        "postgres": {
+          "id": "IfSs7z48tdp5z5uz",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4470aa1a-0ea2-4e07-82eb-9edcacfd34b3",
+              "leftValue": "={{ $json.body.data.messageType }}",
+              "rightValue": "imageMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "d918b57d-41c4-4aad-8418-198f5fe8082c",
+              "leftValue": "={{ $json.body.data.messageType }}",
+              "rightValue": "documentMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        464,
+        -160
+      ],
+      "id": "d464321c-9a42-496e-ae80-1dc72973b6c5",
+      "name": "If Imagem"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM reservas_pendentes \nWHERE status = 'pendente'\nORDER BY created_at DESC\nLIMIT 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        832,
+        -176
+      ],
+      "id": "0b5216a2-46de-43a3-871e-148132d230a9",
+      "name": "buscar_reserva_pendente",
+      "credentials": {
+        "postgres": {
+          "id": "IfSs7z48tdp5z5uz",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE reservas_pendentes \nSET status = 'pago'\nWHERE session_id = '{{ $('Webhook').item.json.body.sender }}'\nAND status = 'pendente'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1648,
+        -176
+      ],
+      "id": "f568fa49-4a3a-49bc-9e4c-bfc8a9f42f88",
+      "name": "atualizar_reserva_paga",
+      "credentials": {
+        "postgres": {
+          "id": "IfSs7z48tdp5z5uz",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://creepymonitorlizard-evolution.cloudfy.live/message/sendText/TESTE",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "01F2E135C135-48E7-AAE9-FEED8583942A"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Webhook').item.json.body.data.key.remoteJid }}"
+            },
+            {
+              "name": "text",
+              "value": "=✅ Pagamento confirmado! Sua reserva está garantida!\n\n🏠 Loft {{ {'665a3d2a2ce3ef71da03b758':'10','666aef863d17b2f93a3d6c02':'11','666aef873d17b2f93a3d6c08':'12','666aef871fe3d56ab6d3e2d8':'13','666aef87faf2c0d1cf11dd48':'14','666aef881fe3d56ab6d3e2e0':'15','666aef88faf2c0d1cf11dd4e':'16','666aef891fe3d56ab6d3e2e6':'17','666aef893d17b2f93a3d6c0e':'18'}[$json.listing_id] }}\n📅 Check-in: {{ $json.checkin }} a partir das 15h\n📅 Check-out: {{ $json.checkout }} até as 11h\n\n📍 Endereço: Rua Condá, nº 1635 E, Bairro Passo dos Fortes, Chapecó, SC — CEP 89805-530\n🗺️ https://www.google.com/maps?q=-27.089195251464844,-52.61200714111328&z=17&hl=pt-BR\n\n🔑 Como acessar seu loft:\nA chave está no Cofre de Cima.\n1️⃣ Digite a senha: *9192#*\n2️⃣ Gire a maçaneta no sentido horário e pegue somente a chave do seu loft\n3️⃣ Junto à chave há um controle eletrônico para abrir o portão\n4️⃣ Feche o cofre girando o botão no sentido anti-horário\n☑️ Ao final da estadia devolva a chave no cofre e nos avise\n\nℹ️ Informações importantes:\n- Sistema de autoatendimento — nos avise ao chegar e ao sair\n- Check-out até 11h. Após esse horário, taxa de R$10,00/hora. A partir das 14h é cobrada nova diária\n- 🚬 Proibido cigarro e qualquer exalador de fumaça dentro do loft (multa de R$150,00)\n- 🛁 Toalhas não inclusas — disponibilizamos por R$6,00/unidade. Ao sair, coloque sobre o box do banheiro\n\nQualquer dúvida estou aqui! 😊"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1936,
+        -176
+      ],
+      "id": "f69d475a-4965-43f6-99aa-71b732f19fc1",
+      "name": "enviar_confirmacao_pagamento"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  \"type\": \"reserved\",\n  \"listingId\": $('buscar_reserva_pendente').first().json[\"listing_id\"],\n  \"checkInDate\": $('buscar_reserva_pendente').first().json[\"checkin\"],\n  \"checkOutDate\": $('buscar_reserva_pendente').first().json[\"checkout\"],\n  \"guests\": Number($('buscar_reserva_pendente').first().json[\"guests\"]),\n  \"_idclient\": $('HTTP Request8').first().json[\"_id\"]\n}) }}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1360,
+        -176
+      ],
+      "id": "fd8c4db9-fa88-4e9c-9164-4bc145c83024",
+      "name": "criar_reserva (novo node)",
+      "retryOnFail": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO reservas_pendentes \n(session_id, listing_id, checkin, checkout, guests, reservation_id, nome, email, telefone, cpf, fname, lname, valor, idclient, link_pagamento, status)\nVALUES (\n  '{{ $fromAI(\"session_id\") }}',\n  '{{ $fromAI(\"listing_id\") }}',\n  '{{ $fromAI(\"checkin\") }}',\n  '{{ $fromAI(\"checkout\") }}',\n  {{ $fromAI(\"guests\") }},\n  '{{ $fromAI(\"reservation_id\") }}',\n  '{{ $fromAI(\"nome\") }}',\n  '{{ $fromAI(\"email\") }}',\n  '{{ $fromAI(\"telefone\") }}',\n  '{{ $fromAI(\"cpf\") }}',\n  '{{ $fromAI(\"fname\") }}',\n  '{{ $fromAI(\"lname\") }}',\n  {{ $fromAI(\"valor\") }},\n  '{{ $fromAI(\"idclient\") }}',\n  '{{ $fromAI(\"link_pagamento\") }}',\n  'pendente'\n)",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        1728,
+        144
+      ],
+      "id": "e4fe7456-f7aa-49e7-94f8-ec7511536945",
+      "name": "salvar_reserva_pendente",
+      "credentials": {
+        "postgres": {
+          "id": "IfSs7z48tdp5z5uz",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://idja.stays.net/external/v1/booking/clients?email={{ encodeURIComponent($('buscar_reserva_pendente').first().json[\"email\"]) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1104,
+        -176
+      ],
+      "id": "f898bee7-cdaa-47cd-8fe5-3c5491432cab",
+      "name": "HTTP Request8",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://creepymonitorlizard-evolution.cloudfy.live/message/sendMedia/TESTE",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "01F2E135C135-48E7-AAE9-FEED8583942A"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Webhook').item.json.body.data.key.remoteJid }}"
+            },
+            {
+              "name": "mediatype",
+              "value": "video"
+            },
+            {
+              "name": "mimetype",
+              "value": "video/mp4"
+            },
+            {
+              "name": "caption",
+              "value": "🎥 Veja como acessar o cofre e retirar sua chave!"
+            },
+            {
+              "name": "media",
+              "value": "https://drive.google.com/uc?export=download&id=1GFBMTkzmf5baPptDMAUr2vw0S103_maL"
+            },
+            {
+              "name": "fileName",
+              "value": "acesso_cofre.mp4"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2224,
+        -176
+      ],
+      "id": "915dbc4a-d547-41c8-b019-a59b76bf9994",
+      "name": "enviar_video_cofre"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Busca um cliente no Stays pelo email. Retorna os dados do cliente incluindo o _id. Use quando o cliente informar o email para buscar reservas do Booking. Parâmetro: email (string).",
+        "url": "=https://idja.stays.net/external/v1/booking/clients?email={{ encodeURIComponent($fromAI('email')) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2608,
+        688
+      ],
+      "id": "461cdd81-de4c-481a-a72b-9b7f7007a1ab",
+      "name": "buscar_cliente_por_email",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Busca as reservas de um cliente no Stays pelo idclient. Retorna lista de reservas com datas, loft e status. Use após buscar_cliente_por_email para obter o idclient. Parâmetro: idclient (string).",
+        "url": "=https://idja.stays.net/external/v1/booking/clients/{{ $fromAI('idclient') }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2752,
+        688
+      ],
+      "id": "d5f9fd4a-48c1-4fa8-bc88-1716a743ca75",
+      "name": "buscar_reservas_cliente",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Verifica disponibilidade E retorna o preço real do Loft 10. Se retornar array vazio ou erro → loft INDISPONÍVEL. Se retornar dados com _mctotal.BRL → loft POSSIVELMENTE disponível, use o valor BRL como preço. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD), guests (número inteiro).",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/calculate-price",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $fromAI('data_entrada') }}\",\n  \"to\": \"{{ $fromAI('data_saida') }}\",\n  \"listingIds\": [\"665a3d2a2ce3ef71da03b758\"],\n  \"guests\": {{ parseInt($fromAI('guests')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2320,
+        144
+      ],
+      "id": "934e84dd-0ad6-423a-b6bf-8d266258e335",
+      "name": "verificar_e_cotar_loft_10",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "OBRIGATÓRIO após verificar_e_cotar_loft_10 retornar preço: verifica se existe reserva ativa no Loft 10 para o período. Se retornar array vazio [] → loft LIVRE. Se retornar qualquer item → loft OCUPADO, descarte. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD).",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $fromAI('data_entrada') }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $fromAI('data_saida') }}"
+            },
+            {
+              "name": "dateType",
+              "value": "included"
+            },
+            {
+              "name": "listingId",
+              "value": "665a3d2a2ce3ef71da03b758"
+            },
+            {
+              "name": "type",
+              "value": "reserved"
+            },
+            {
+              "name": "type",
+              "value": "booked"
+            },
+            {
+              "name": "type",
+              "value": "contract"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2320,
+        464
+      ],
+      "id": "a8b3e624-ee98-4f40-9b51-8875b6b844f8",
+      "name": "verificar_reservas_loft_10",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Verifica disponibilidade E retorna o preço real do Loft 11. Se retornar array vazio ou erro → loft INDISPONÍVEL. Se retornar dados com _mctotal.BRL → loft POSSIVELMENTE disponível, use o valor BRL como preço. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD), guests (número inteiro).",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/calculate-price",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $fromAI('data_entrada') }}\",\n  \"to\": \"{{ $fromAI('data_saida') }}\",\n  \"listingIds\": [\"666aef863d17b2f93a3d6c02\"],\n  \"guests\": {{ parseInt($fromAI('guests')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2480,
+        144
+      ],
+      "id": "d62f38ff-2cab-4256-9471-e59ee39297e5",
+      "name": "verificar_e_cotar_loft_11",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "OBRIGATÓRIO após verificar_e_cotar_loft_11 retornar preço: verifica se existe reserva ativa no Loft 11 para o período. Se retornar array vazio [] → loft LIVRE. Se retornar qualquer item → loft OCUPADO, descarte. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD).",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $fromAI('data_entrada') }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $fromAI('data_saida') }}"
+            },
+            {
+              "name": "dateType",
+              "value": "included"
+            },
+            {
+              "name": "listingId",
+              "value": "666aef863d17b2f93a3d6c02"
+            },
+            {
+              "name": "type",
+              "value": "reserved"
+            },
+            {
+              "name": "type",
+              "value": "booked"
+            },
+            {
+              "name": "type",
+              "value": "contract"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2480,
+        464
+      ],
+      "id": "6ab24d8f-0bb6-4dff-b753-af345f07c8ce",
+      "name": "verificar_reservas_loft_11",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Verifica disponibilidade E retorna o preço real do Loft 12. Se retornar array vazio ou erro → loft INDISPONÍVEL. Se retornar dados com _mctotal.BRL → loft POSSIVELMENTE disponível, use o valor BRL como preço. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD), guests (número inteiro).",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/calculate-price",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $fromAI('data_entrada') }}\",\n  \"to\": \"{{ $fromAI('data_saida') }}\",\n  \"listingIds\": [\"666aef873d17b2f93a3d6c08\"],\n  \"guests\": {{ parseInt($fromAI('guests')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2624,
+        144
+      ],
+      "id": "cbec510c-52a8-4a6e-9c84-ed40a5619478",
+      "name": "verificar_e_cotar_loft_12",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "OBRIGATÓRIO após verificar_e_cotar_loft_12 retornar preço: verifica se existe reserva ativa no Loft 12 para o período. Se retornar array vazio [] → loft LIVRE. Se retornar qualquer item → loft OCUPADO, descarte. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD).",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $fromAI('data_entrada') }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $fromAI('data_saida') }}"
+            },
+            {
+              "name": "dateType",
+              "value": "included"
+            },
+            {
+              "name": "listingId",
+              "value": "666aef873d17b2f93a3d6c08"
+            },
+            {
+              "name": "type",
+              "value": "reserved"
+            },
+            {
+              "name": "type",
+              "value": "booked"
+            },
+            {
+              "name": "type",
+              "value": "contract"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2624,
+        464
+      ],
+      "id": "f26f40f7-03fd-4fb7-9a18-5cf8cf8df52b",
+      "name": "verificar_reservas_loft_12",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Verifica disponibilidade E retorna o preço real do Loft 13. Se retornar array vazio ou erro → loft INDISPONÍVEL. Se retornar dados com _mctotal.BRL → loft POSSIVELMENTE disponível, use o valor BRL como preço. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD), guests (número inteiro).",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/calculate-price",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $fromAI('data_entrada') }}\",\n  \"to\": \"{{ $fromAI('data_saida') }}\",\n  \"listingIds\": [\"666aef871fe3d56ab6d3e2d8\"],\n  \"guests\": {{ parseInt($fromAI('guests')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2784,
+        144
+      ],
+      "id": "013f710f-c39e-4d4c-a764-6652c171f0fd",
+      "name": "verificar_e_cotar_loft_13",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "OBRIGATÓRIO após verificar_e_cotar_loft_13 retornar preço: verifica se existe reserva ativa no Loft 13 para o período. Se retornar array vazio [] → loft LIVRE. Se retornar qualquer item → loft OCUPADO, descarte. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD).",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $fromAI('data_entrada') }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $fromAI('data_saida') }}"
+            },
+            {
+              "name": "dateType",
+              "value": "included"
+            },
+            {
+              "name": "listingId",
+              "value": "666aef871fe3d56ab6d3e2d8"
+            },
+            {
+              "name": "type",
+              "value": "reserved"
+            },
+            {
+              "name": "type",
+              "value": "booked"
+            },
+            {
+              "name": "type",
+              "value": "contract"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2784,
+        464
+      ],
+      "id": "ba0ee348-223b-4d30-a8f4-50f7788d5853",
+      "name": "verificar_reservas_loft_13",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Verifica disponibilidade E retorna o preço real do Loft 14. Se retornar array vazio ou erro → loft INDISPONÍVEL. Se retornar dados com _mctotal.BRL → loft POSSIVELMENTE disponível, use o valor BRL como preço. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD), guests (número inteiro).",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/calculate-price",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $fromAI('data_entrada') }}\",\n  \"to\": \"{{ $fromAI('data_saida') }}\",\n  \"listingIds\": [\"666aef87faf2c0d1cf11dd48\"],\n  \"guests\": {{ parseInt($fromAI('guests')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2928,
+        144
+      ],
+      "id": "eeb3cf16-5fa3-4744-b0dc-7568f401da3f",
+      "name": "verificar_e_cotar_loft_14",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "OBRIGATÓRIO após verificar_e_cotar_loft_14 retornar preço: verifica se existe reserva ativa no Loft 14 para o período. Se retornar array vazio [] → loft LIVRE. Se retornar qualquer item → loft OCUPADO, descarte. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD).",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $fromAI('data_entrada') }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $fromAI('data_saida') }}"
+            },
+            {
+              "name": "dateType",
+              "value": "included"
+            },
+            {
+              "name": "listingId",
+              "value": "666aef87faf2c0d1cf11dd48"
+            },
+            {
+              "name": "type",
+              "value": "reserved"
+            },
+            {
+              "name": "type",
+              "value": "booked"
+            },
+            {
+              "name": "type",
+              "value": "contract"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2928,
+        464
+      ],
+      "id": "15661f30-cf4c-425c-a619-b3fff267bd08",
+      "name": "verificar_reservas_loft_14",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Verifica disponibilidade E retorna o preço real do Loft 15. Se retornar array vazio ou erro → loft INDISPONÍVEL. Se retornar dados com _mctotal.BRL → loft POSSIVELMENTE disponível, use o valor BRL como preço. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD), guests (número inteiro).",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/calculate-price",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $fromAI('data_entrada') }}\",\n  \"to\": \"{{ $fromAI('data_saida') }}\",\n  \"listingIds\": [\"666aef881fe3d56ab6d3e2e0\"],\n  \"guests\": {{ parseInt($fromAI('guests')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2320,
+        304
+      ],
+      "id": "95471075-3061-4d2c-b29b-478ac675eca7",
+      "name": "verificar_e_cotar_loft_15",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "OBRIGATÓRIO após verificar_e_cotar_loft_15 retornar preço: verifica se existe reserva ativa no Loft 15 para o período. Se retornar array vazio [] → loft LIVRE. Se retornar qualquer item → loft OCUPADO, descarte. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD).",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $fromAI('data_entrada') }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $fromAI('data_saida') }}"
+            },
+            {
+              "name": "dateType",
+              "value": "included"
+            },
+            {
+              "name": "listingId",
+              "value": "666aef881fe3d56ab6d3e2e0"
+            },
+            {
+              "name": "type",
+              "value": "reserved"
+            },
+            {
+              "name": "type",
+              "value": "booked"
+            },
+            {
+              "name": "type",
+              "value": "contract"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2320,
+        624
+      ],
+      "id": "a91bf7ce-59d1-4186-b623-f0c466d817d2",
+      "name": "verificar_reservas_loft_15",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Verifica disponibilidade E retorna o preço real do Loft 16. Se retornar array vazio ou erro → loft INDISPONÍVEL. Se retornar dados com _mctotal.BRL → loft POSSIVELMENTE disponível, use o valor BRL como preço. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD), guests (número inteiro).",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/calculate-price",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $fromAI('data_entrada') }}\",\n  \"to\": \"{{ $fromAI('data_saida') }}\",\n  \"listingIds\": [\"666aef88faf2c0d1cf11dd4e\"],\n  \"guests\": {{ parseInt($fromAI('guests')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2480,
+        304
+      ],
+      "id": "3d07c18a-734e-46ba-b6e3-af46090727eb",
+      "name": "verificar_e_cotar_loft_16",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "OBRIGATÓRIO após verificar_e_cotar_loft_16 retornar preço: verifica se existe reserva ativa no Loft 16 para o período. Se retornar array vazio [] → loft LIVRE. Se retornar qualquer item → loft OCUPADO, descarte. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD).",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $fromAI('data_entrada') }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $fromAI('data_saida') }}"
+            },
+            {
+              "name": "dateType",
+              "value": "included"
+            },
+            {
+              "name": "listingId",
+              "value": "666aef88faf2c0d1cf11dd4e"
+            },
+            {
+              "name": "type",
+              "value": "reserved"
+            },
+            {
+              "name": "type",
+              "value": "booked"
+            },
+            {
+              "name": "type",
+              "value": "contract"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2480,
+        624
+      ],
+      "id": "708764ca-ff35-48f0-a449-88401e95bb7b",
+      "name": "verificar_reservas_loft_16",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Verifica disponibilidade E retorna o preço real do Loft 17. Se retornar array vazio ou erro → loft INDISPONÍVEL. Se retornar dados com _mctotal.BRL → loft POSSIVELMENTE disponível, use o valor BRL como preço. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD), guests (número inteiro).",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/calculate-price",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $fromAI('data_entrada') }}\",\n  \"to\": \"{{ $fromAI('data_saida') }}\",\n  \"listingIds\": [\"666aef891fe3d56ab6d3e2e6\"],\n  \"guests\": {{ parseInt($fromAI('guests')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2624,
+        304
+      ],
+      "id": "f3454028-f281-401c-b3b0-dac0e8715bcd",
+      "name": "verificar_e_cotar_loft_17",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "OBRIGATÓRIO após verificar_e_cotar_loft_17 retornar preço: verifica se existe reserva ativa no Loft 17 para o período. Se retornar array vazio [] → loft LIVRE. Se retornar qualquer item → loft OCUPADO, descarte. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD).",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $fromAI('data_entrada') }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $fromAI('data_saida') }}"
+            },
+            {
+              "name": "dateType",
+              "value": "included"
+            },
+            {
+              "name": "listingId",
+              "value": "666aef891fe3d56ab6d3e2e6"
+            },
+            {
+              "name": "type",
+              "value": "reserved"
+            },
+            {
+              "name": "type",
+              "value": "booked"
+            },
+            {
+              "name": "type",
+              "value": "contract"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2624,
+        624
+      ],
+      "id": "34a59220-c068-4015-9c69-16b7ed20bee6",
+      "name": "verificar_reservas_loft_17",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Verifica disponibilidade E retorna o preço real do Loft 18. Se retornar array vazio ou erro → loft INDISPONÍVEL. Se retornar dados com _mctotal.BRL → loft POSSIVELMENTE disponível, use o valor BRL como preço. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD), guests (número inteiro).",
+        "method": "POST",
+        "url": "https://idja.stays.net/external/v1/booking/calculate-price",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $fromAI('data_entrada') }}\",\n  \"to\": \"{{ $fromAI('data_saida') }}\",\n  \"listingIds\": [\"666aef893d17b2f93a3d6c0e\"],\n  \"guests\": {{ parseInt($fromAI('guests')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2784,
+        304
+      ],
+      "id": "bf51361d-4d4d-465c-be96-9564fbdf1613",
+      "name": "verificar_e_cotar_loft_18",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "OBRIGATÓRIO após verificar_e_cotar_loft_18 retornar preço: verifica se existe reserva ativa no Loft 18 para o período. Se retornar array vazio [] → loft LIVRE. Se retornar qualquer item → loft OCUPADO, descarte. Parâmetros: data_entrada (YYYY-MM-DD), data_saida (YYYY-MM-DD).",
+        "url": "https://idja.stays.net/external/v1/booking/reservations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $fromAI('data_entrada') }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $fromAI('data_saida') }}"
+            },
+            {
+              "name": "dateType",
+              "value": "included"
+            },
+            {
+              "name": "listingId",
+              "value": "666aef893d17b2f93a3d6c0e"
+            },
+            {
+              "name": "type",
+              "value": "reserved"
+            },
+            {
+              "name": "type",
+              "value": "booked"
+            },
+            {
+              "name": "type",
+              "value": "contract"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2784,
+        624
+      ],
+      "id": "ebe01a40-2271-4f59-a3c6-10799ad34aa2",
+      "name": "verificar_reservas_loft_18",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "onQAMRAGnTbVD0cG",
+          "name": "stays_api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM resposta_alan \nWHERE session_id = '554991517590@s.whatsapp.net'\nLIMIT 20;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1408,
+        1184
+      ],
+      "id": "e526047d-ac16-4008-9681-3e777f8b96cd",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "IfSs7z48tdp5z5uz",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Hóspede": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request6": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calcular_preco_estadia": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cadastrar_cliente_stays": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "listar_todos_imoveis_stays": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "criar_reserva_stays": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "escalar_para_humano": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pausar_atendimento": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Imagem": {
+      "main": [
+        [
+          {
+            "node": "buscar_reserva_pendente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Buscar Hóspede",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buscar_reserva_pendente": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "atualizar_reserva_paga": {
+      "main": [
+        [
+          {
+            "node": "enviar_confirmacao_pagamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "criar_reserva (novo node)": {
+      "main": [
+        [
+          {
+            "node": "atualizar_reserva_paga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salvar_reserva_pendente": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request8": {
+      "main": [
+        [
+          {
+            "node": "criar_reserva (novo node)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_confirmacao_pagamento": {
+      "main": [
+        [
+          {
+            "node": "enviar_video_cofre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buscar_cliente_por_email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buscar_reservas_cliente": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_e_cotar_loft_10": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_reservas_loft_10": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_e_cotar_loft_11": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_reservas_loft_11": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_e_cotar_loft_12": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_reservas_loft_12": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_e_cotar_loft_13": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_reservas_loft_13": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_e_cotar_loft_14": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_reservas_loft_14": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_e_cotar_loft_15": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_reservas_loft_15": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_e_cotar_loft_16": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_reservas_loft_16": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_e_cotar_loft_17": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_reservas_loft_17": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_e_cotar_loft_18": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_reservas_loft_18": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9b888186-f59f-4684-8ab0-9ff2240de93e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "98f262c8e74bfe933374d11f52775395ac6061943f15b45a2864c8f357da37da"
+  },
+  "id": "uxf9I7rffiBVTlNz",
+  "tags": []
+}
