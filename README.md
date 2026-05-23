@@ -128,7 +128,7 @@ hotel-booking-agent/
 
 Built by **Samuel Luzzatto** — AI Automation Developer specialized in autonomous agents and end-to-end workflow automation.
 
-- 🔗 [LinkedIn](https://www.linkedin.com/in/samuelluzzatto)
+- 🔗 [LinkedIn](https://www.linkedin.com/in/samuel-luzzatto-b5b575289/?skipRedirect=true)
 - 📧 luzzattoribeiro@gmail.com
 - 🌍 Open to remote opportunities · Brazil & international (PT / DE / EN)
 
